@@ -1,117 +1,432 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Scientific Calculator</title>
-    <link href="style.css" type="text/css" rel="stylesheet">
+    <title>Weather Dashboard Pro</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Weather Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css">
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .backdrop-blur-lg {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .card {
+            background-color: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s;
+        }
+        .card:hover {
+            background-color: rgba(0, 0, 0, 0.35);
+        }
+        .wi {
+            line-height: 1;
+        }
+        .forecast-day, .hourly-item {
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .forecast-day:hover, .hourly-item:hover {
+            transform: translateY(-5px);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        #loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar for hourly forecast */
+        .hourly-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .hourly-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .hourly-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .hourly-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
 </head>
-<body>
-    <h1 class="text-center">Advanced Scientific Calculator</h1>
-    <div class="container">
-        <div class="row">
-            <input class="input" type="text" readonly />
-        </div>
-        <div class="row">
-            <button class="button sci-button">(</button>
-            <button class="button sci-button">)</button>
-            <button class="button sci-button">mc</button>
-            <button class="button sci-button">m+</button>
-            <button class="button sci-button">m-</button>
-            <button class="button sci-button">mr</button>
-        </div>
-        <div class="row">
-            <button class="button sci-button" data-value="**2">x²</button>
-            <button class="button sci-button" data-value="**">xʸ</button>
-            <button class="button sci-button">sin</button>
-            <button class="button sci-button">cos</button>
-            <button class="button sci-button">tan</button>
-            <button class="button sci-button">√</button>
-        </div>
-        <div class="row">
-            <button class="button orange">AC</button>
-            <button class="button orange">DEL</button>
-            <button class="button orange">%</button>
-            <button class="button orange">/</button>
-            <button class="button sci-button">log</button>
-            <button class="button">7</button>
-        </div>
-        <div class="row">
-            <button class="button">8</button>
-            <button class="button">9</button>
-            <button class="button orange">*</button>
-            <button class="button sci-button">ln</button>
-            <button class="button">4</button>
-            <button class="button">5</button>
-        </div>
-        <div class="row">
-            <button class="button">6</button>
-            <button class="button orange">-</button>
-            <button class="button sci-button" data-value="Math.PI">π</button>
-            <button class="button">1</button>
-            <button class="button">2</button>
-            <button class="button">3</button>
-        </div>
-        <div class="row">
-            <button class="button orange">+</button>
-            <button class="button sci-button" data-value="Math.E">e</button>
-            <button class="button">0</button>
-            <button class="button">.</button>
-            <button class="button orange equal-sign">=</button>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="p-4 shadow-lg backdrop-blur-lg bg-black/30 sticky top-0 z-50">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold tracking-wider text-white">Weather Dashboard</h1>
+                <form id="searchForm" class="flex items-center w-full max-w-xs">
+                    <input id="cityInput" type="search" placeholder="Search for a city..." class="w-full bg-transparent border-b-2 border-white/50 focus:border-white focus:outline-none py-1 px-2 text-white transition">
+                    <button type="submit" class="ml-3 text-white/80 hover:text-white transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="weather-content" class="container mx-auto p-4 flex-grow opacity-0 transition-opacity duration-500">
+            <!-- Current Weather Section -->
+            <section id="current-weather" class="card backdrop-blur-lg rounded-xl p-6 mb-8">
+                <!-- Data will be populated here -->
+            </section>
+
+             <!-- Hourly Forecast Section -->
+            <section id="hourly-section" class="card backdrop-blur-lg rounded-xl p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-white">Hourly Forecast</h2>
+                <div id="hourly-container" class="hourly-container flex overflow-x-auto space-x-4 pb-4">
+                    <!-- Hourly data will be populated here -->
+                </div>
+            </section>
+
+            <!-- 5-Day Forecast & Details Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <section id="forecast-section" class="lg:col-span-2 card backdrop-blur-lg rounded-xl p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-white">5-Day Forecast</h2>
+                    <div id="forecast-container" class="space-y-3">
+                        <!-- Forecast data will be populated here -->
+                    </div>
+                </section>
+                <section id="details-section" class="card backdrop-blur-lg rounded-xl p-6">
+                     <h2 class="text-xl font-semibold mb-4 text-white">Today's Highlights</h2>
+                     <div id="details-container" class="space-y-4">
+                        <!-- Additional details like UV index, sunrise/sunset will be populated here -->
+                     </div>
+                </section>
+            </div>
+        </main>
+        
+        <!-- Loader and Error Message -->
+        <div id="loader-container" class="flex-grow flex flex-col justify-center items-center p-4 text-center">
+             <div id="loader"></div>
+             <p id="message" class="mt-4 text-lg text-white/80"></p>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        const apiKey = "27f1d356c0d476aa385453727d1391a6";
+
+        // DOM Elements
+        const searchForm = document.getElementById('searchForm');
+        const cityInput = document.getElementById('cityInput');
+        const weatherContent = document.getElementById('weather-content');
+        const loaderContainer = document.getElementById('loader-container');
+        const loader = document.getElementById('loader');
+        const message = document.getElementById('message');
+        
+        // Weather Data Containers
+        const currentWeatherSection = document.getElementById('current-weather');
+        const hourlyContainer = document.getElementById('hourly-container');
+        const forecastContainer = document.getElementById('forecast-container');
+        const detailsContainer = document.getElementById('details-container');
+
+        /**
+         * Fetches weather data for a given city.
+         * @param {string} city - The name of the city to fetch weather for.
+         */
+        const fetchWeatherDataByCity = async (city) => {
+            showLoading(`Fetching weather for ${city}...`);
+            try {
+                // Fetch current weather
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+                const weatherResponse = await fetch(weatherUrl);
+                if (!weatherResponse.ok) throw new Error('City not found.');
+                const weatherData = await weatherResponse.json();
+
+                // Fetch 5-day forecast
+                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+                const forecastResponse = await fetch(forecastUrl);
+                if (!forecastResponse.ok) throw new Error('Could not fetch forecast data.');
+                const forecastData = await forecastResponse.json();
+
+                updateUI(weatherData, forecastData);
+                hideLoading();
+
+            } catch (error) {
+                showError(error.message);
+            }
+        };
+        
+        /**
+         * Fetches weather data based on geographic coordinates.
+         * @param {number} lat - Latitude.
+         * @param {number} lon - Longitude.
+         */
+        const fetchWeatherByCoords = async (lat, lon) => {
+            showLoading("Fetching your local weather...");
+            try {
+                 // Fetch current weather by coords
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+                const weatherResponse = await fetch(weatherUrl);
+                if (!weatherResponse.ok) throw new Error('Could not fetch local weather.');
+                const weatherData = await weatherResponse.json();
+                
+                // Fetch 5-day forecast by coords
+                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+                const forecastResponse = await fetch(forecastUrl);
+                if (!forecastResponse.ok) throw new Error('Could not fetch forecast data.');
+                const forecastData = await forecastResponse.json();
+                
+                updateUI(weatherData, forecastData);
+                hideLoading();
+            } catch (error) {
+                showError(error.message);
+                // Fallback to default city if geolocation fails
+                fetchWeatherDataByCity('Nagpur');
+            }
+        };
+
+        /**
+         * Updates the entire UI with new weather data.
+         * @param {object} weatherData - Current weather data from API.
+         * @param {object} forecastData - Forecast data from API.
+         */
+        const updateUI = (weatherData, forecastData) => {
+            updateCurrentWeather(weatherData);
+            updateHourlyForecast(forecastData.list);
+            updateDailyForecast(forecastData.list);
+            updateWeatherDetails(weatherData);
+            updateBackground(weatherData.weather[0].main, weatherData.dt, weatherData.sys.sunrise, weatherData.sys.sunset);
+        };
+
+        const formatTime = (timestamp, timezoneOffset) => {
+            const date = new Date((timestamp + timezoneOffset) * 1000);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+        };
+        
+        const updateCurrentWeather = (data) => {
+            const { name, main, weather, wind, sys, dt } = data;
+            const iconClass = getWeatherIcon(weather[0].id, dt, sys.sunrise, sys.sunset);
+            currentWeatherSection.innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="text-center md:text-left">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white">${name}, ${sys.country}</h2>
+                        <p class="text-lg text-white/80">${new Date(dt * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="wi ${iconClass} text-7xl md:text-8xl text-white"></i>
+                        <div class="ml-4 text-left">
+                            <p class="text-5xl md:text-6xl font-bold text-white">${Math.round(main.temp)}&deg;C</p>
+                            <p class="capitalize text-xl text-white/90">${weather[0].description}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        const updateHourlyForecast = (hourlyList) => {
+            hourlyContainer.innerHTML = '';
+            const next8Entries = hourlyList.slice(0, 8);
+            next8Entries.forEach(hour => {
+                const { main, weather, dt_txt, dt } = hour;
+                const time = new Date(dt_txt).toLocaleTimeString([], { hour: 'numeric', hour12: true });
+                const iconClass = getWeatherIcon(weather[0].id, dt);
+
+                const hourlyItem = document.createElement('div');
+                hourlyItem.className = 'hourly-item card rounded-xl p-3 text-center flex-shrink-0 flex flex-col items-center w-24';
+                hourlyItem.innerHTML = `
+                    <p class="font-medium text-sm text-white/80">${time}</p>
+                    <i class="wi ${iconClass} text-4xl my-2 text-white"></i>
+                    <p class="font-bold text-lg text-white">${Math.round(main.temp)}&deg;C</p>
+                `;
+                hourlyContainer.appendChild(hourlyItem);
+            });
+        };
+
+        const updateDailyForecast = (forecastList) => {
+            forecastContainer.innerHTML = '';
+            const dailyData = {};
+
+            forecastList.forEach(item => {
+                const date = item.dt_txt.split(' ')[0];
+                if (!dailyData[date]) {
+                    dailyData[date] = {
+                        temps: [],
+                        weathers: [],
+                        icons: []
+                    };
+                }
+                dailyData[date].temps.push(item.main.temp);
+                dailyData[date].weathers.push(item.weather[0]);
+                dailyData[date].icons.push(getWeatherIcon(item.weather[0].id, item.dt));
+            });
+
+            for (const date in dailyData) {
+                if (Object.hasOwnProperty.call(dailyData, date)) {
+                    const day = dailyData[date];
+                    const maxTemp = Math.round(Math.max(...day.temps));
+                    const minTemp = Math.round(Math.min(...day.temps));
+                    const primaryWeather = day.weathers.sort((a,b) => a.id - b.id)[0]; // Get the most severe weather for the day
+                    const iconClass = getWeatherIcon(primaryWeather.id);
+                    const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+
+                    const forecastItem = document.createElement('div');
+                    forecastItem.className = 'forecast-day flex items-center justify-between p-3 rounded-lg';
+                    forecastItem.innerHTML = `
+                        <p class="font-semibold w-1/3 text-white/90">${dayName}</p>
+                        <div class="flex items-center gap-2 w-1/3 justify-center">
+                            <i class="wi ${iconClass} text-2xl text-white"></i>
+                            <span class="text-sm capitalize text-white/80">${primaryWeather.main}</span>
+                        </div>
+                        <p class="font-medium w-1/3 text-right text-white">${maxTemp}&deg; / ${minTemp}&deg;</p>
+                    `;
+                    forecastContainer.appendChild(forecastItem);
+                }
+            }
+        };
+
+        const updateWeatherDetails = (data) => {
+            const { main, wind, sys, visibility } = data;
+
+            const createDetailCard = (title, value, icon) => `
+                <div class="card rounded-lg p-4 flex items-center gap-4">
+                    <i class="wi ${icon} text-3xl text-white/70"></i>
+                    <div>
+                        <p class="text-sm text-white/80">${title}</p>
+                        <p class="text-lg font-bold text-white">${value}</p>
+                    </div>
+                </div>`;
+
+            detailsContainer.innerHTML = `
+                ${createDetailCard('Humidity', `${main.humidity}%`, 'wi-humidity')}
+                ${createDetailCard('Wind Speed', `${wind.speed.toFixed(1)} m/s`, 'wi-strong-wind')}
+                ${createDetailCard('Sunrise', `${formatTime(sys.sunrise, data.timezone)}`, 'wi-sunrise')}
+                ${createDetailCard('Sunset', `${formatTime(sys.sunset, data.timezone)}`, 'wi-sunset')}
+                ${createDetailCard('Feels Like', `${Math.round(main.feels_like)}&deg;C`, 'wi-thermometer')}
+                ${createDetailCard('Visibility', `${(visibility / 1000).toFixed(1)} km`, 'wi-fog')}
+            `;
+        };
+
+        const getWeatherIcon = (weatherId, dt, sunrise, sunset) => {
+            const isDay = dt && sunrise && sunset ? (dt > sunrise && dt < sunset) : true;
+            
+            if (weatherId >= 200 && weatherId < 300) return 'wi-thunderstorm';
+            if (weatherId >= 300 && weatherId < 400) return 'wi-sprinkle';
+            if (weatherId >= 500 && weatherId < 600) return 'wi-rain';
+            if (weatherId >= 600 && weatherId < 700) return 'wi-snow';
+            if (weatherId >= 700 && weatherId < 800) return 'wi-fog';
+            if (weatherId === 800) return isDay ? 'wi-day-sunny' : 'wi-night-clear';
+            if (weatherId === 801) return isDay ? 'wi-day-cloudy' : 'wi-night-alt-cloudy';
+            if (weatherId > 801 && weatherId < 805) return 'wi-cloudy';
+            return 'wi-na';
+        };
+
+        const updateBackground = (condition, dt, sunrise, sunset) => {
+            const isDay = dt > sunrise && dt < sunset;
+            let imageUrl = '';
+            
+            switch (condition.toLowerCase()) {
+                case 'clear':
+                    imageUrl = isDay 
+                        ? 'https://images.unsplash.com/photo-1590077428593-a55d2265037a?q=80&w=2070' // Sunny Day
+                        : 'https://images.unsplash.com/photo-1488866022504-f2584929ca5f?q=80&w=2062'; // Clear Night
+                    break;
+                case 'clouds':
+                    imageUrl = isDay
+                        ? 'https://images.unsplash.com/photo-1498496294664-d9372eb521f3?q=80&w=2070' // Cloudy Day
+                        : 'https://images.unsplash.com/photo-1532176283285-042d35a50745?q=80&w=1974'; // Cloudy Night
+                    break;
+                case 'rain':
+                case 'drizzle':
+                    imageUrl = 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1935'; // Rainy
+                    break;
+                case 'thunderstorm':
+                    imageUrl = 'https://images.unsplash.com/photo-1605727226343-9364b9742444?q=80&w=2070'; // Thunderstorm
+                    break;
+                case 'snow':
+                    imageUrl = 'https://images.unsplash.com/photo-1491002052546-bf38f186af56?q=80&w=2108'; // Snowy
+                    break;
+                case 'mist':
+                case 'smoke':
+                case 'haze':
+                case 'dust':
+                case 'fog':
+                    imageUrl = 'https://images.unsplash.com/photo-1485790433035-25d29f837a89?q=80&w=2070'; // Foggy/Misty
+                    break;
+                default:
+                    imageUrl = 'https://images.unsplash.com/photo-1532179104-549143a50915?q=80&w=2070'; // Default
+            }
+            document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${imageUrl}')`;
+        };
+
+        const showLoading = (msg) => {
+            weatherContent.classList.add('opacity-0');
+            loaderContainer.classList.remove('hidden');
+            loaderContainer.classList.add('flex');
+            loader.classList.remove('hidden');
+            message.textContent = msg;
+        };
+
+        const hideLoading = () => {
+            weatherContent.classList.remove('opacity-0');
+            loaderContainer.classList.add('hidden');
+            loaderContainer.classList.remove('flex');
+        };
+
+        const showError = (msg) => {
+            weatherContent.classList.add('opacity-0');
+            loaderContainer.classList.remove('hidden');
+            loaderContainer.classList.add('flex');
+            loader.classList.add('hidden');
+            message.textContent = `Error: ${msg}`;
+        };
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const city = cityInput.value.trim();
+            if (city) {
+                fetchWeatherDataByCity(city);
+                cityInput.value = '';
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeatherByCoords(latitude, longitude);
+                    },
+                    (error) => {
+                        console.error("Geolocation error:", error);
+                        showError("Geolocation is disabled. Showing weather for a default city.");
+                        fetchWeatherDataByCity('Nagpur'); // Fallback to Nagpur
+                    }
+                );
+            } else {
+                 showError("Geolocation is not supported. Showing weather for a default city.");
+                 fetchWeatherDataByCity('Nagpur'); // Fallback to Nagpur
+            }
+        });
+    </script>
 </body>
 </html>
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculate anything with your math..</title>
-        <link href="style2.css" type="text/css" rel="stylesheet">
-    <link href="style.css" type="text/css" rel="stylesheet">
-</head>
-<body>
-    <h1 class="text-center">Calculate me ! -A calculator made by me</h1>
-    <div class="container flex flex-col items-center bg-red mx-auto m-w-20">
-        <div class="row">
-          <input class="input"type="text"/>  
-        </div>
-        <div class="row">
-           <button class="button yellow">AC</button>
-           <button class="button yellow">%</button>
-           <button class="button yellow">M+</button>
-            <button class="button yellow">M-</button>
-        </div>
-        <div class="row">
-           <button class="button">7</button>
-           <button class="button">8</button>
-           <button class="button">9</button>
-            <button class="button yellow">*</button>
-        </div>
-         <div class="row">
-           <button class="button">4</button>
-           <button class="button">5</button>
-           <button class="button">6</button>
-            <button class="button yellow">/</button>
-        </div>
-         <div class="row">
-           <button class="button">1</button>
-           <button class="button">2</button>
-           <button class="button">3</button>
-            <button class="button yellow">+</button>
-        </div>
-         <div class="row">
-           <button class="button">0</button>
-           <button class="button yellow">.</button>
-           <button class="button yellow">=</button>
-            <button class="button yellow">-</button>
-        </div>
-    </div>
-    
-    <script src="script.js"></script>
-
-</body>
-</html> -->
