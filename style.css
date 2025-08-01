@@ -1,0 +1,117 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    font-family: 'Ubuntu', sans-serif;
+    background-color: #f0f0f0;
+}
+
+.text-center {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.container {
+    max-width: 480px;
+    margin: auto;
+    background-color: #2c3e50;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.row {
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.input {
+    width: 100%;
+    font-size: 2.5rem;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    text-align: right;
+    outline: none;
+}
+
+.button {
+    width: 66px;
+    padding: 20px 0;
+    margin: 0 3px;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    background-color: #34495e;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.button:hover {
+    background-color: #4a6fa5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.orange {
+    background-color: #f39c12;
+    color: white;
+}
+
+.orange:hover {
+    background-color: #e67e22;
+}
+
+.sci-button {
+    background-color: #7f8c8d;
+    color: white;
+}
+
+.sci-button:hover {
+    background-color: #95a5a6;
+}
+
+.equal-sign {
+    width: 142px; /* Make equals sign wider */
+}
+
+/* @import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Varela+Round&display=swap');
+
+.text-center{
+    text-align: center;
+}
+
+.mx-auto{
+    margin: auto;
+
+}
+.flex{
+  display: flex;
+}
+.flex-col{
+  flex-direction: column;
+}
+.items-center{
+  align-items: center;
+} */
